@@ -23,8 +23,8 @@ function login(e) {
             localStorage.setItem(
                 "token_type", data.token_type
             );
-            document.cookie="access_token=Bearer " + localStorage.getItem('access_token') + "; domain=test.test";
-//            document.cookie="access_token=Bearer " + localStorage.getItem('access_token');
+            // document.cookie="access_token=Bearer " + localStorage.getItem('access_token') + "; domain=test.test";
+            document.cookie="access_token=Bearer " + localStorage.getItem('access_token');
             window.location.assign('/cases')
 
         },
