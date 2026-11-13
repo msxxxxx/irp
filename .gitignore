@@ -162,3 +162,5 @@ cython_debug/
 .idea
 /log/access.log
 /log/error.log
+/migrations/versions/*.py
+/migrations/versions/.py
