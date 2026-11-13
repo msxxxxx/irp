@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   demo:
     container_name: "demo_demo"
@@ -20,8 +18,21 @@ services:
     env_file:
       - ".env"
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully   # ← ключевое
+    # healthcheck:
+    #   test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:80 >/dev/null 2>&1 || exit 1"]
+    #   interval: 5s
+    #   timeout: 3s
+    #   retries: 10
+    #   start_period: 15s
+    # depends_on:
+    #   - db
+    #   - redis
 
   migrations:
     container_name: "demo_migrations"
@@ -34,7 +45,10 @@ services:
     env_file:
       - ".env"
     depends_on:
-      - db
+      db:
+        condition: service_healthy   # ← ключевое
+    # depends_on:
+    #   - db
 
   db:
     container_name: "demo_db"
@@ -45,12 +59,23 @@ services:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: admin
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d admin -h 127.0.0.1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
 
   redis:
     container_name: "demo_redis"
     hostname: "demo"
     restart: always
     image: redis:7.2.2-alpine3.18
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   server:
     container_name: "demo-nginx"
@@ -64,5 +89,8 @@ services:
       - "./log:/var/log/nginx:rw"
       - "./static:/opt/static:ro"
       - "./templates:/opt/templates:ro"
+    # depends_on:
+    #   demo:
+    #     condition: service_healthy
     depends_on:
       - demo
