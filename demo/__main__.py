@@ -2,15 +2,15 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from demo.handlers import router
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import PlainTextResponse
+from fastapi import FastAPI, HTTPException, Depends, Response
+from fastapi.responses import PlainTextResponse, RedirectResponse, JSONResponse
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from starlette import status
 from starlette.middleware.sessions import SessionMiddleware
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
-from demo.dependencies import check_session, authenticate
+from demo.dependencies import check_session, authenticate, _authenticate
 from demo.models import User
 from demo.schemas import UserRegisterForm, UserLoginForm, TokenPairDetail
 from demo.utils import create_password_hash, verify_password, create_jwt, create_access_token
@@ -34,8 +34,20 @@ app.add_middleware(
 app.add_middleware(middleware_class=ProxyHeadersMiddleware, trusted_hosts=("*",))
 
 
-@app.get(path="/login")
-async def index(request: Request):
+# @app.get(path="/login")
+# async def index(request: Request):
+#     return templating.TemplateResponse(request=request, name="demo/sign-in.html")
+async def _authenticate_optional(session: DBSession, request: Request):
+    try:
+        return await _authenticate(session, request)
+    except HTTPException:
+        return None
+
+    
+@app.get("/login")
+async def index(request: Request, user=Depends(_authenticate_optional)):
+    if user:
+        return RedirectResponse("/cases", status_code=302)
     return templating.TemplateResponse(request=request, name="demo/sign-in.html")
 
 
@@ -92,6 +104,17 @@ async def signin(session: DBSession, form: UserLoginForm):
     access_token = create_access_token(payload=payload)
     refresh_token = create_access_token(payload=payload)
     user_name = user.email
+    # ставим cookie на сервере
+    # response.set_cookie(
+    #     key="access_token",
+    #     value=f"Bearer {access_token}",
+    #     httponly=True,        # JS не видит cookie — защита от XSS
+    #     secure=True,          # только по HTTPS (в dev можно False)
+    #     samesite="lax",       # защита от CSRF + работает при переходах по ссылке
+    #     max_age=3600,         # 1 час, подгоните под TTL токена
+    #     path="/"
+    # )
+
     return TokenPairDetail(
         user_name=user_name,
         access_token=access_token,

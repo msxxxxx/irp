@@ -39,6 +39,10 @@ async def _check_session(
 
 
 async def _authenticate(session: DBSession, request: Request):
+    # authorization = request.cookies.get("access_token")   # -> "Bearer xxx" или None
+    # if not authorization or not authorization.startswith("Bearer "):
+    #     raise HTTPException(status_code=403)
+    # token = authorization.removeprefix("Bearer ")
     authorization = request.headers.get("cookie")
     if authorization is None:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)

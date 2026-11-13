@@ -28,6 +28,11 @@ function login(e) {
             window.location.assign('/cases')
 
         },
+        // success: function (data) {
+        //     // cookie уже поставлена сервером (HttpOnly) — JS её не видит и не трогает
+        //     localStorage.setItem("user_name", data.user_name);   // можно оставить только это
+        //     window.location.assign('/cases');
+        // },
 //        error: function (data) {
 //            alert("user or password invalid")
 //            window.location.assign('/login')

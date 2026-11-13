@@ -14,8 +14,8 @@ from demo.config import pwd_context, config
 # from demo.__main__ import signin
 router = APIRouter(
     prefix="/cases",
-    tags=["Pages"],
-    dependencies=[authenticate]
+    tags=["Pages"]
+    #dependencies=[authenticate]
 )
 
 
